@@ -181,27 +181,47 @@ The change in the telemetry source triggers the event ``evt_elevationSource``.
 M2 and Camera Hexapods
 ######################
 
-The M2 and Camera hexapods have identical control interfaces. The Camera hexapod has ID=1 and M2 hexapod has ID=2.
+The M2 and Camera hexapods have identical control interfaces.
+The Camera hexapod has ID=1 and M2 hexapod has ID=2.
 
-What the hexapods do is to position themselves to help achieve optimal image quality. So our discussion focuses on how we command the hexapods to the desired positions.
-Here and in the rest of this tech note, position of the hexapod refers to the position (x,y,z) and orientation (dx, dy, dz) relative to the pivot point.
-Unlike for the mirror systems, whose LUTs have to reside with their own control systems due to safety considerations, the LUTs of the hexapods do not have to be with the hexapod CSCs. We choose to have the hexapod LUTs to be part of their owns CSCs for consistency across the AOS.
+What the hexapods do is to position themselves to help achieve optimal image quality.
+So our discussion focuses on how we command the hexapods to the desired positions.
+Here and in the rest of this tech note, position of the hexapod refers to the position (x,y,z) and orientation (rx, ry, rz) around the pivot point.
+Unlike for the mirror systems, whose LUTs have to reside with their own control systems due to safety considerations, the LUTs of the hexapods do not have to be with the MTHexapod CSCs.
+We choose to make the hexapod LUTs part of the MTHexapod CSCs for consistency across the AOS.
 
+There are various points (x,y,z) and positions (x,y,z,rx,ry,rz) a user needs to understand when operating a hexapod.
 
-There are various points (x,y,z) and positions (x,y,z,dx,dy,dz) a user needs to understand when operating a hexapod.
+- The mechanical zero position, which is (x=0, y=0, z=0, rx=0, ry=0, rz=0) as determined by the actuator encoder readings.
+  When the encoder readings are at their pre-calibrated offset values, the hexapod is at its mechanical zero position.
+- The pivot point, which is specified in the configuration of the low-level controller.\ [#label1]_
+  We can define a coordinate system (CS) that is fixed to the hexapod telescope-side base plate.
+  The origin of the CS is at the center of the telescope-side mounting surface, for both the Camera and M2 hexapods.
+  The x, y, and z axes are in parallel with the Camera CS or M2 CS, when defined using the hexapod hardware
+  (See Sec `5 <https://sitcomtn-003.lsst.io/#m2>`__ and `7 <https://sitcomtn-003.lsst.io/#lsstcam>`__ of SITCOMTN-003).
+  The x, y, and z defined by the pivot configuration is in reference to this CS.
+  For AOS operations, we define the pivot point at L1S1 first vertex and M2 vertex when the hexapod is at their mechanical zero position.
+  Note that the pivot point does not move with the hexapod, i.e., it is fixed relative to the hexapod base plate.
+- Hexapod reported position, as reported by the hexapod control system and MTHexapod CSC.
+  These are in reference to a CS which we call "the hexapod CS".
+  The origin of the hexapod CS is at its pivot point.
+  When the system is perfectly aligned, the x, y, and z axes are in parallel with the CCS or M2 CS.
+  When we put the pivot point at L1S1 vertex or M2 vertex, under perfect system alignment, the hexapod CS is the same as the Camera CS or M2 CS.
+- The LUT-commanded collimated position.
+  This is where the LUT predicts collimated position should be, which is the best collimated position we can achieve with open-loop AOS control.
+  It aims at putting L1S1 first vertex and M2 vertex roughly at the origins of the Camera CS or M2 CS, defined in reference to M1M3.
+- The MTAOS-commanded collimated position.
+  This is where the MTAOS control predicts the collimated position should be, which is the best collimated position we can achieve with closed-loop AOS control.
+  The MTAOS corrections aim at covering the gap between the LUT-commanded collimated position and the ideal collimated position.
 
-- The mechanical zero position, which is (0,0,0,0,0,0) as determined by the actuator encoder readings. When the encoder readings are at their pre-calibrated offset values, the hexapod is at its mechanical zero position.
-- The pivot point, defined as part of the hexapod configuration (right now this is set using SAL command ``cmd_setPivot``; We plan to remove it from SAL). We can define a coordinate system (CS) that is fixed to the hexapod telescope-side base plate. The origin of the CS is at the center of the telescope-side mounting surface, for both the Camera and M2 hexapods. The x, y, and z axes are in parallel with the CCS or M2 CS, when defined using the hexapod hardware (See Sec `5 <https://sitcomtn-003.lsst.io/#m2>`__ and `7 <https://sitcomtn-003.lsst.io/#lsstcam>`__ of SITCOMTN-003). The x, y, and z defined by the pivot configuration is in reference to this CS. For AOS operations, we define the pivot point at L1S1 first vertex and M2 vertex when the hexapod is at their mechanical zero position. Note that the pivot point does not move with the hexapod, i.e., it is fixed relative to the hexapod base plate.
-- Hexapod reported position, as reported by the hexapod control system and CSC. These are in reference to the hexapod CS. The origin of the hexapod CS is at its pivot point. When the system is perfectly aligned, the x, y, and z axes are in parallel with the CCS or M2 CS. When we put the pivot point at L1S1 vertex or M2 vertex, under perfect system alignment, the hexapod CS is the same as the CCS or M2 CS.
-- The LUT-commanded collimated position. This is where the LUT predicts collimated position should be, which is the best collimated position we can achieve with open-loop AOS control. It aims at putting L1S1 first vertex and M2 vertex roughly at the origins of the CCS or M2CS, defined in reference to M1M3.
-- The MTAOS-commanded collimated position. This is where the MTAOS control predicts the collimated position should be, which is the best collimated position we can achieve with closed-loop AOS control. The MTAOS corrections aim at covering the gap between the LUT-commanded collimated position and the ideal collimated position.
+.. [#label1] The pivot position can be overridden with the ``setPivot`` CSC command and also in the GUI. In the longer run, we plan to move these to a configuration file. These will rarely need to be changed. Making them easy to change via CSC command or GUI may have unintended consequences.
 
 The actual target position of a hexapod is the sum of two things -
 
 #. The LUT compensation
 #. The user-commanded motion
 
-Due to mechanical imperfections in the telescope structure, it is expected that the optimal collimated position of the hexapod will be a bit different from the hexapod mechanical zero position, defined by the encoders and reported by the hexapod control system and CSC.
+Due to mechanical imperfections in the telescope structure, it is expected that the optimal collimated position of the hexapod will be a bit different from the hexapod mechanical zero position, defined by the encoders and reported by the hexapod control system and MTHexapod CSC.
 This will be initially captured by the ASC and kept track of by MTAOS,
 and eventually become part of the constant (:math:`C_0`) term in the elevation LUT.
 
@@ -210,9 +230,9 @@ By default, the LUT mode is off, #1 above is set to zero.
 This is useful for engineering testing. In this mode, the hexapod should simply move to the user-commanded position (depending on whether it is a move (``cmd_move``) or offset (``cmd_offset``) command, it will be in reference to either (0,0,0,0,0,0) or the current position of the hexapod).
 When the LUT mode is on, #1 above is determined by the LUTs.
 This is useful for science operations. A science user will not have to deal with or even think about how the LUT works.
-The hexapod CSC will take care of that in the background.
+The MTHexapod CSC will take care of that in the background.
 For example, when a science user wants to take an extra-focal image at 1mm, the command is simply ``cmd_move.set_start(z=1000)``.
-The CSC will be contantly adjusting the LUT compensation taking into account changes in the elevation angle and temperature etc.
+The MTHexapod CSC will be contantly adjusting the LUT compensation taking into account changes in the elevation angle and temperature etc.
 
 Below we use an example to demonstrate how these commands are supposed to be used. For simplicity, we assume there is only one degree of freedom which is z displacement; the unit is arbituary; and there is only one LUT which only depends on elevation. When the hexapod was last disabled, it was at position z=5.
 
@@ -228,7 +248,7 @@ Note that having the hexapod move upon enabling the LUT is not desirable.
 Because when this is followed by a move command, the hexapod will move twice.
 In the above example, the hexapod would have moved from z=5 to 8.1 then back to 2.1.
 Another alternative is to enable the LUT mode by specifying Lut=True in the move command.
-But it feels odd that a move command is need for enabling and disabling the LUT compensation mode even when no move is desired.
+But it feels odd that a move command is needed for enabling and disabling the LUT compensation mode even when no move is desired.
 
 To take intra and extra focal images with offset of 1mm, all that is needed is to turn on the compensation mode, then alternate between ``cmd_move.set_start(z=1000)`` and ``cmd_move.set_start(z=-1000)``. We don’t use ``cmd_offset.set_start(z=2000)`` and ``cmd_offset.set_start(z=-2000)`` because that puts constraints on the position we start with.
 
@@ -317,7 +337,7 @@ So we expect the ASC will be a critical tool for aligning the telescope.
 
 The command ``cmd_measureTarget`` is used for measuring the position of the target, where target refers to M2 or the Camera.
 The positions measured are published as event ``evt_position``.
-The measured positions are in M2 Coordinate system (CS) and CCS, respectively, which are defined using M1M3 as the reference.
+The measured positions are in M2 CS and Camera CS, respectively, which are defined using M1M3 as the reference.
 (The coordinate systems used are configurable. We will need to make sure they are configured as we expect.)
 
 When MTAOS attempts to align M2 and the Camera using the ASC, it uses the command ``cmd_measureTarget`` to take position measurements.

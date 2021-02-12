@@ -205,8 +205,8 @@ There are various points (x,y,z) and positions (x,y,z,rx,ry,rz) a user needs to 
 - Hexapod reported position, as reported by the hexapod control system and MTHexapod CSC.
   These are in reference to a CS which we call "the hexapod CS".
   The origin of the hexapod CS is at its pivot point.
-  When the system is perfectly aligned, the x, y, and z axes are in parallel with the CCS or M2 CS.
-  When we put the pivot point at L1S1 vertex or M2 vertex, under perfect system alignment, the hexapod CS is the same as the Camera CS or M2 CS.
+  The x, y, and z axes are in parallel with the Camera CS or M2 CS, when defined using the hexapod hardware.
+  The x-y plane is in parallel with the M2 or camera-side mounting surface when the hexapod is at its mechanical zero position.
 - The LUT-commanded collimated position.
   This is where the LUT predicts collimated position should be, which is the best collimated position we can achieve with open-loop AOS control.
   It aims at putting L1S1 first vertex and M2 vertex roughly at the origins of the Camera CS or M2 CS, defined in reference to M1M3.

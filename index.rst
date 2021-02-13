@@ -195,18 +195,8 @@ There are various points (x,y,z) and positions (x,y,z,rx,ry,rz) a user needs to 
 - The mechanical zero position, which is (x=0, y=0, z=0, rx=0, ry=0, rz=0) as determined by the actuator encoder readings.
   When the encoder readings are at their pre-calibrated offset values, the hexapod is at its mechanical zero position.
 - The pivot point, which is specified in the configuration of the low-level controller.\ [#label1]_
-  We can define a coordinate system (CS) that is fixed to the hexapod telescope-side base plate.
-  The origin of the CS is at the center of the telescope-side mounting surface, for both the Camera and M2 hexapods.
-  The x, y, and z axes are in parallel with the Camera CS or M2 CS, when defined using the hexapod hardware
-  (See Sec `5 <https://sitcomtn-003.lsst.io/#m2>`__ and `7 <https://sitcomtn-003.lsst.io/#lsstcam>`__ of SITCOMTN-003).
-  The x, y, and z defined by the pivot configuration is in reference to this CS.
-  For AOS operations, we define the pivot point at L1S1 first vertex and M2 vertex when the hexapod is at their mechanical zero position.
-  Note that the pivot point does not move with the hexapod, i.e., it is fixed relative to the hexapod base plate.
-- Hexapod reported position, as reported by the hexapod control system and MTHexapod CSC.
-  These are in reference to a CS which we call "the hexapod CS".
-  The origin of the hexapod CS is at its pivot point.
-  The x, y, and z axes are in parallel with the Camera CS or M2 CS, when defined using the hexapod hardware.
-  The x-y plane is in parallel with the M2 or camera-side mounting surface when the hexapod is at its mechanical zero position.
+  The pivot point is fixed relative to the hexapod base plate, i.e., it does not move with the hexapod.
+  The location of the pivot point relative to the base plate is described in Sec. 2.2 of LTS-206.
 - The LUT-commanded collimated position.
   This is where the LUT predicts collimated position should be, which is the best collimated position we can achieve with open-loop AOS control.
   It aims at putting L1S1 first vertex and M2 vertex roughly at the origins of the Camera CS or M2 CS, defined in reference to M1M3.
@@ -215,6 +205,7 @@ There are various points (x,y,z) and positions (x,y,z,rx,ry,rz) a user needs to 
   The MTAOS corrections aim at covering the gap between the LUT-commanded collimated position and the ideal collimated position.
 
 .. [#label1] The pivot position can be overridden with the ``setPivot`` CSC command and also in the GUI. In the longer run, we plan to move these to a configuration file. These will rarely need to be changed. Making them easy to change via CSC command or GUI may have unintended consequences.
+
 
 The actual target position of a hexapod is the sum of two things -
 

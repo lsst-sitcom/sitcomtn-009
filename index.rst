@@ -95,7 +95,7 @@ Or, in more human-readable format:
 
 Each CSC also has its own documentation page:
 
-- M1M3 https://github.com/lsst-ts/ts_m1m3support/blob/master/README.md
+- M1M3 https://ts-m1m3support.lsst.io/v/develop/index.html
 - M2 https://github.com/lsst-ts/ts_mtm2/blob/master/README.md
 - M2 and Camera Hexapods https://ts-mthexapod.lsst.io
 - MTAOS https://ts-mtaos.lsst.io

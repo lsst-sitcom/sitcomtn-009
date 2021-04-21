@@ -265,9 +265,8 @@ The actual hexapod position, as measured using encoders for each strut, is publi
 The demanded position as telemetry is given in ``tel_application.demand``.
 The positions of the individual structs are given in ``tel_actuators.calibrated`` and ``tel_actuators.raw``.
 
-The hexapods can not accept a new ``cmd_move`` or ``cmd_offset`` command before the previous move finishes or the move be stopped by command ``cmd_stop``.
 When a move is completed, the hexapod publishes an event ``evt_inPosition``.
-When individual actuators reach their positions, those are reported with events ``evt_actuatorInPosition``.
+When individual actuators reach their positions, those are reported with the event ``evt_actuatorInPosition``.
 
 The hexapods slews with the TMA passively - the hexapod legs are much stiffer than M2.
 

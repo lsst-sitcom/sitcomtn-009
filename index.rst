@@ -225,20 +225,30 @@ The MTHexapod CSC will take care of that in the background.
 For example, when a science user wants to take an extra-focal image at 1mm, the command is simply ``cmd_move.set_start(z=1000)``.
 The MTHexapod CSC will be contantly adjusting the LUT compensation taking into account changes in the elevation angle and temperature etc.
 
+It is expected that the AOS will be primarily using ``cmd_move`` instead of ``cmd_offset``.
+We are not removing ``cmd_offset`` because (1) it has been implemented and tested, and (2) just in case we might need it occasionally.
+
 Below we use an example to demonstrate how these commands are supposed to be used. For simplicity, we assume there is only one degree of freedom which is z displacement; the unit is arbituary; and there is only one LUT which only depends on elevation. When the hexapod was last disabled, it was at position z=5.
 
 #. Once we enter enabled state, the hexapod stays at z=5, LUT mode = off;
-#. The user turns LUT on using ``cmd_enableLut``, the hexapod stays at z=5; but all subsequent move commands will take into account the LUT;
-#. Then the user sends command ``cmd_move.set_start(z=-1)``. The hexapod moves to z=-1+3.1=2.1. The 3.1 is from the LUT and calculated using the elevation angle;
+#. The user turns LUT on using ``cmd_enableLut``, the hexapod starts moving toward z=5+3.1=8.1. The 3.1 is from the LUT and calculated using the elevation angle; From this point on, the hexapod will always be calculating the LUT compensation in the background using the latest elevation input etc and adding that compensation to the user-commanded position.
+#. Then the user sends command ``cmd_move.set_start(z=-1)``. The hexapod moves to z=-1+3.1=2.1. Assuming the 3.1 has not changed since the step above.
 #. The user sends command ``cmd_move.set_start(z=1)``, elevation is unchanged, the hexapod goes to z=1+3.1 = 4.1.
 #. Elevation changes result in LUT compensation to change to 3.2, the hexapod moves to z=4.2.
 #. The user issues command ``cmd_offset.set_start(z=-1)``, the hexapod moves to z=4.2-1 = 3.2.
 #. The user turns off compensation mode using ``cmd_enableLut``, the hexapod stays at z=3.2.
 
-Note that having the hexapod move upon enabling the LUT is not desirable.
-Because when this is followed by a move command, the hexapod will move twice.
-In the above example, the hexapod would have moved from z=5 to 8.1 then back to 2.1.
-Another alternative is to enable the LUT mode by specifying Lut=True in the move command.
+Note that if a new ``cmd_move`` or ``cmd_offset`` command is issued while the hexapod is in motion, 
+i.e., moving from point to point, the hexapod CSC would stop the current motion, 
+then reset the target position and start a new motion.
+If the new command is a ``cmd_move`` command, the new target position is solely determined by the new command.
+If the new command is a ``cmd_offset`` command, the new target position is obtained by adding the offset to the old target position.
+
+Given this mechanism, in the above example, if ``cmd_enableLut`` is followed immediately by ``cmd_move.set_start(z=-1)``,
+before the move to 8.1 finishes,
+the hexapod will stop the move toward 8.1, reset the new target as 2.1, and move toward that.
+
+Note that an alternative could be to enable the LUT mode by specifying Lut=True in the move command.
 But it feels odd that a move command is needed for enabling and disabling the LUT compensation mode even when no move is desired.
 
 To take intra and extra focal images with offset of 1mm, all that is needed is to turn on the compensation mode, then alternate between ``cmd_move.set_start(z=1000)`` and ``cmd_move.set_start(z=-1000)``. We don’t use ``cmd_offset.set_start(z=2000)`` and ``cmd_offset.set_start(z=-2000)`` because that puts constraints on the position we start with.

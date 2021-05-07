@@ -228,9 +228,10 @@ The MTHexapod CSC will be contantly adjusting the LUT compensation taking into a
 It is expected that the AOS will be primarily using ``cmd_move`` instead of ``cmd_offset``.
 We are not removing ``cmd_offset`` because (1) it has been implemented and tested, and (2) just in case we might need it occasionally.
 
-Below we use an example to demonstrate how these commands are supposed to be used. For simplicity, we assume there is only one degree of freedom which is z displacement; the unit is arbituary; and there is only one LUT which only depends on elevation. When the hexapod was last disabled, it was at position z=5.
+Below we use an example to demonstrate how these commands are supposed to be used. For simplicity, we assume there is only one degree of freedom which is z displacement; the unit is arbituary; and there is only one LUT which only depends on elevation. When the hexapod was last disabled, it was at position z=3.
 
-#. Once we enter enabled state, the hexapod stays at z=5, LUT mode = off;
+#. Once we enter enabled state, the hexapod stays at z=3, LUT mode = off;
+#. The user sends command ``cmd_move.set_start(z=5)``. The hexapod moves to z=5;
 #. The user turns LUT on using ``cmd_enableLut``, the hexapod starts moving toward z=5+3.1=8.1. The 3.1 is from the LUT and calculated using the elevation angle; From this point on, the hexapod will always be calculating the LUT compensation in the background using the latest elevation input etc and adding that compensation to the user-commanded position.
 #. Then the user sends command ``cmd_move.set_start(z=-1)``. The hexapod moves to z=-1+3.1=2.1. Assuming the 3.1 has not changed since the step above.
 #. The user sends command ``cmd_move.set_start(z=1)``, elevation is unchanged, the hexapod goes to z=1+3.1 = 4.1.
@@ -238,8 +239,15 @@ Below we use an example to demonstrate how these commands are supposed to be use
 #. The user issues command ``cmd_offset.set_start(z=-1)``, the hexapod moves to z=4.2-1 = 3.2.
 #. The user turns off compensation mode using ``cmd_enableLut``, the hexapod stays at z=3.2.
 
-Note that if a new ``cmd_move`` or ``cmd_offset`` command is issued while the hexapod is in motion, 
-i.e., moving from point to point, the hexapod CSC would stop the current motion, 
+Note that if step 2 is not in place, the hexapod will not move in step 3.
+For the compensation mode to take effect, the hexapod has to see a previous move or offset command,
+which is associated with an ``evt_cmdPosition`` event.
+The hexapod cannot simply take its current position as a commanded uncompensated position.
+Otherwise, if the user disable and enable the hexapod a few times in a row, the hexapod will keep drifting.
+
+
+If a new ``cmd_move`` or ``cmd_offset`` command is issued while the hexapod is in motion,
+i.e., moving from point to point, the hexapod CSC would stop the current motion,
 then reset the target position and start a new motion.
 If the new command is a ``cmd_move`` command, the new target position is solely determined by the new command.
 If the new command is a ``cmd_offset`` command, the new target position is obtained by adding the offset to the old target position.

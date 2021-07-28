@@ -136,7 +136,7 @@ The events ``evt_totalCylinderForces`` give the same information, but all the fo
 The forces, as measured by the load cells, are given as telemetry under the topic ``tel_forceActuatorData``.
 Under this topic, the user can find 156 ``primaryCylinderForces``, 112 ``secondaryCylinderForces``, 12 ``xForces``, 100 ``yForces``, 156 ``zForces``, and the net x, y, z-forces and x, y, z-moments.
 
-The M1M3 LUT forces are on whenever the mirror control system is in the enabled state.
+The M1M3 LUT forces are on whenever the mirror control system is in the enabled state and raised.
 Due to delay in TMA telemetry, by default, M1M3 uses its own inclinometer reading as input to the elevation LUT.
 Only when the elevation angle from the onboard inclinometer is not available would the TMA telemetry be used.
 The source for the elevation angle can be switched between the onboard inclinometer and the TMA telemetry using the
